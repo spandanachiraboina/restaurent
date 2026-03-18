@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Ember & Oak – Fine Dining</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:wght@300;400;500&family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #0d0b08;
+      --surface: #141209;
+      --gold: #c9a84c;
+      --gold-light: #e8c97a;
+      --cream: #f5ede0;
+      --muted: #7a6e5f;
+      --text: #e8ddd0;
+      --accent: #8b3a2a;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Cormorant Garamond', serif;
+      overflow-x: hidden;
+    }
+
+    /* NAV */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.5rem 4rem;
+      background: linear-gradient(to bottom, rgba(13,11,8,0.95), transparent);
+      transition: background 0.3s;
+    }
+    nav.scrolled { background: rgba(13,11,8,0.97); border-bottom: 1px solid rgba(201,168,76,0.15); }
+    .nav-logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.6rem;
+      color: var(--gold);
+      text-decoration: none;
+      letter-spacing: 2px;
+    }
+    .nav-links { display: flex; gap: 2.5rem; list-style: none; }
+    .nav-links a {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--text);
+      text-decoration: none;
+      transition: color 0.3s;
+    }
+    .nav-links a:hover, .nav-links a.active { color: var(--gold); }
+    .nav-reserve {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--bg);
+      background: var(--gold);
+      border: none;
+      padding: 0.65rem 1.5rem;
+      cursor: pointer;
+      transition: background 0.3s, transform 0.2s;
+      text-decoration: none;
+    }
+    .nav-reserve:hover { background: var(--gold-light); transform: translateY(-1px); }
+
+    /* HERO */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      background: radial-gradient(ellipse at 60% 40%, #2a1a0e 0%, #0d0b08 70%);
+    }
+    .hero-bg-text {
+      position: absolute;
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(8rem, 18vw, 22rem);
+      color: rgba(201,168,76,0.04);
+      white-space: nowrap;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      letter-spacing: -2px;
+      user-select: none;
+    }
+    .hero-content {
+      text-align: center;
+      z-index: 2;
+      animation: fadeUp 1.2s ease forwards;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(40px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .hero-label {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 5px;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 1.5rem;
+      display: block;
+    }
+    .hero h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(3.5rem, 8vw, 7.5rem);
+      line-height: 1;
+      color: var(--cream);
+      font-weight: 400;
+      margin-bottom: 0.5rem;
+    }
+    .hero h1 em { font-style: italic; color: var(--gold); }
+    .hero-sub {
+      font-size: 1.3rem;
+      color: var(--muted);
+      font-weight: 300;
+      margin-bottom: 3rem;
+      letter-spacing: 3px;
+    }
+    .hero-divider {
+      width: 60px; height: 1px;
+      background: var(--gold);
+      margin: 1.5rem auto;
+    }
+    .hero-desc {
+      font-size: 1.1rem;
+      color: var(--text);
+      max-width: 450px;
+      margin: 0 auto 3rem;
+      line-height: 1.8;
+      font-weight: 300;
+    }
+    .hero-btns { display: flex; gap: 1.5rem; justify-content: center; flex-wrap: wrap; }
+    .btn-primary {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      background: var(--gold);
+      color: var(--bg);
+      border: none;
+      padding: 1rem 2.5rem;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.3s;
+      display: inline-block;
+    }
+    .btn-primary:hover { background: var(--gold-light); transform: translateY(-2px); }
+    .btn-outline {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      background: transparent;
+      color: var(--gold);
+      border: 1px solid var(--gold);
+      padding: 1rem 2.5rem;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.3s;
+      display: inline-block;
+    }
+    .btn-outline:hover { background: rgba(201,168,76,0.1); transform: translateY(-2px); }
+    .scroll-hint {
+      position: absolute; bottom: 2rem; left: 50%; transform: translateX(-50%);
+      display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+      font-family: 'Montserrat', sans-serif; font-size: 0.6rem; letter-spacing: 2px;
+      text-transform: uppercase; color: var(--muted);
+      animation: bounce 2s infinite;
+    }
+    @keyframes bounce {
+      0%, 100% { transform: translateX(-50%) translateY(0); }
+      50% { transform: translateX(-50%) translateY(8px); }
+    }
+    .scroll-line { width: 1px; height: 40px; background: linear-gradient(to bottom, var(--gold), transparent); }
+
+    /* SECTION BASE */
+    section { padding: 7rem 4rem; }
+    .section-label {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.65rem; font-weight: 600;
+      letter-spacing: 5px; text-transform: uppercase;
+      color: var(--gold); margin-bottom: 1rem;
+    }
+    .section-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2.2rem, 4vw, 3.5rem);
+      color: var(--cream);
+      font-weight: 400;
+      line-height: 1.2;
+    }
+    .section-title em { font-style: italic; color: var(--gold); }
+    .gold-line { width: 50px; height: 1px; background: var(--gold); margin: 1.5rem 0; }
+
+    /* ABOUT */
+    .about {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6rem;
+      align-items: center;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .about-text p {
+      font-size: 1.1rem;
+      line-height: 1.9;
+      color: var(--muted);
+      font-weight: 300;
+      margin-bottom: 1.2rem;
+    }
+    .about-stats {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 2rem; margin-top: 3rem;
+    }
+    .stat-num {
+      font-family: 'Playfair Display', serif;
+      font-size: 3rem; color: var(--gold);
+      line-height: 1;
+    }
+    .stat-label {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.65rem; letter-spacing: 2px;
+      text-transform: uppercase; color: var(--muted);
+      margin-top: 0.3rem;
+    }
+    .about-visual {
+      position: relative;
+    }
+    .about-img-box {
+      width: 100%;
+      aspect-ratio: 3/4;
+      background: linear-gradient(135deg, #2a1a0e, #1a0e06);
+      border: 1px solid rgba(201,168,76,0.15);
+      display: flex; align-items: center; justify-content: center;
+      position: relative; overflow: hidden;
+    }
+    .about-img-box::before {
+      content: '🍽️';
+      font-size: 6rem;
+      opacity: 0.15;
+    }
+    .about-badge {
+      position: absolute;
+      bottom: -2rem; left: -2rem;
+      width: 120px; height: 120px;
+      background: var(--gold);
+      border-radius: 50%;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      color: var(--bg);
+    }
+    .about-badge span:first-child {
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem; font-weight: 700;
+    }
+    .about-badge span:last-child {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.55rem; letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    /* SPECIALS */
+    .specials-section {
+      background: var(--surface);
+      text-align: center;
+    }
+    .specials-header { margin-bottom: 4rem; }
+    .specials-header .gold-line { margin: 1.5rem auto; }
+    .specials-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2px;
+      max-width: 1100px;
+      margin: 0 auto 3rem;
+    }
+    .special-card {
+      background: #0d0b08;
+      padding: 3rem 2rem;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.3s;
+      cursor: pointer;
+    }
+    .special-card:hover { transform: translateY(-6px); }
+    .special-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 2px;
+      background: var(--gold);
+      transform: scaleX(0);
+      transition: transform 0.3s;
+    }
+    .special-card:hover::before { transform: scaleX(1); }
+    .special-emoji { font-size: 2.5rem; margin-bottom: 1.5rem; display: block; }
+    .special-card h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.4rem;
+      color: var(--cream);
+      margin-bottom: 0.8rem;
+    }
+    .special-card p {
+      font-size: 0.95rem;
+      color: var(--muted);
+      line-height: 1.7;
+      margin-bottom: 1.5rem;
+    }
+    .special-price {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.6rem;
+      color: var(--gold);
+    }
+    .special-tag {
+      position: absolute; top: 1rem; right: 1rem;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.55rem; letter-spacing: 2px;
+      text-transform: uppercase;
+      background: var(--accent);
+      color: var(--cream);
+      padding: 0.3rem 0.7rem;
+    }
+
+    /* EXPERIENCE */
+    .experience-section {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      max-width: 100%;
+    }
+    .exp-left {
+      background: linear-gradient(135deg, #1a0e06, #2a1a0e);
+      padding: 6rem;
+      display: flex; flex-direction: column; justify-content: center;
+    }
+    .exp-right {
+      background: var(--gold);
+      padding: 6rem;
+      display: flex; flex-direction: column; justify-content: center;
+    }
+    .exp-right .section-label { color: var(--bg); }
+    .exp-right .section-title { color: var(--bg); }
+    .exp-right .gold-line { background: var(--bg); }
+    .exp-features { margin-top: 2rem; display: flex; flex-direction: column; gap: 1.5rem; }
+    .exp-feature { display: flex; gap: 1rem; align-items: flex-start; }
+    .exp-icon { font-size: 1.4rem; flex-shrink: 0; }
+    .exp-feature h4 {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.7rem; letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--gold-light);
+      margin-bottom: 0.3rem;
+    }
+    .exp-feature p { font-size: 0.95rem; color: var(--muted); line-height: 1.6; }
+    .exp-right .exp-feature h4 { color: var(--bg); }
+    .exp-right .exp-feature p { color: rgba(13,11,8,0.7); }
+    .hours-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.5rem; }
+    .hour-item { }
+    .hour-day { font-family: 'Montserrat', sans-serif; font-size: 0.65rem; letter-spacing: 2px; text-transform: uppercase; color: var(--bg); font-weight: 600; }
+    .hour-time { font-family: 'Cormorant Garamond', serif; font-size: 1.1rem; color: rgba(13,11,8,0.8); }
+
+    /* TESTIMONIALS */
+    .testimonials-section { text-align: center; padding: 7rem 4rem; }
+    .testimonials-section .gold-line { margin: 1.5rem auto; }
+    .testimonials-grid {
+      display: grid; grid-template-columns: repeat(3,1fr);
+      gap: 2rem; max-width: 1100px; margin: 4rem auto 0;
+    }
+    .testi-card {
+      border: 1px solid rgba(201,168,76,0.15);
+      padding: 2.5rem;
+      position: relative;
+      transition: border-color 0.3s, transform 0.3s;
+    }
+    .testi-card:hover { border-color: var(--gold); transform: translateY(-4px); }
+    .testi-quote {
+      font-family: 'Playfair Display', serif;
+      font-size: 4rem; color: var(--gold);
+      line-height: 0.5; margin-bottom: 1.5rem;
+      display: block;
+    }
+    .testi-card p { font-size: 1rem; color: var(--muted); line-height: 1.8; font-style: italic; margin-bottom: 2rem; }
+    .testi-author { font-family: 'Montserrat', sans-serif; font-size: 0.65rem; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); }
+    .testi-stars { color: var(--gold); font-size: 0.85rem; margin-bottom: 1rem; }
+
+    /* NEWSLETTER */
+    .newsletter-section {
+      background: linear-gradient(135deg, #1a0e06, var(--surface));
+      text-align: center;
+      padding: 5rem 4rem;
+      border-top: 1px solid rgba(201,168,76,0.1);
+      border-bottom: 1px solid rgba(201,168,76,0.1);
+    }
+    .newsletter-section .section-title { margin-bottom: 1rem; }
+    .newsletter-section p { color: var(--muted); font-size: 1.1rem; margin-bottom: 2.5rem; }
+    .newsletter-form {
+      display: flex; gap: 0; max-width: 480px; margin: 0 auto;
+    }
+    .newsletter-form input {
+      flex: 1;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(201,168,76,0.3);
+      border-right: none;
+      color: var(--text);
+      padding: 1rem 1.5rem;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.3s;
+    }
+    .newsletter-form input:focus { border-color: var(--gold); }
+    .newsletter-form button {
+      background: var(--gold);
+      color: var(--bg);
+      border: none;
+      padding: 1rem 2rem;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.65rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .newsletter-form button:hover { background: var(--gold-light); }
+
+    /* FOOTER */
+    footer {
+      background: #080705;
+      padding: 4rem 4rem 2rem;
+      border-top: 1px solid rgba(201,168,76,0.1);
+    }
+    .footer-grid {
+      display: grid; grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: 4rem; margin-bottom: 3rem;
+    }
+    .footer-brand .nav-logo { display: block; font-size: 1.8rem; margin-bottom: 1rem; }
+    .footer-brand p { font-size: 0.95rem; color: var(--muted); line-height: 1.8; max-width: 260px; }
+    .footer-social { display: flex; gap: 1rem; margin-top: 1.5rem; }
+    .social-btn {
+      width: 36px; height: 36px;
+      border: 1px solid rgba(201,168,76,0.3);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--muted); font-size: 0.8rem;
+      text-decoration: none; transition: all 0.3s; cursor: pointer;
+    }
+    .social-btn:hover { border-color: var(--gold); color: var(--gold); }
+    .footer-col h4 {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.65rem; letter-spacing: 3px;
+      text-transform: uppercase; color: var(--gold);
+      margin-bottom: 1.5rem;
+    }
+    .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 0.8rem; }
+    .footer-col a { color: var(--muted); text-decoration: none; font-size: 0.95rem; transition: color 0.3s; }
+    .footer-col a:hover { color: var(--gold); }
+    .footer-bottom {
+      border-top: 1px solid rgba(255,255,255,0.05);
+      padding-top: 2rem;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .footer-bottom p { font-family: 'Montserrat', sans-serif; font-size: 0.65rem; letter-spacing: 1px; color: var(--muted); }
+
+    /* RESPONSIVE */
+    @media (max-width: 900px) {
+      nav { padding: 1.2rem 2rem; }
+      .nav-links { display: none; }
+      section { padding: 5rem 2rem; }
+      .about { grid-template-columns: 1fr; gap: 3rem; }
+      .specials-grid { grid-template-columns: 1fr; }
+      .experience-section { grid-template-columns: 1fr; }
+      .exp-left, .exp-right { padding: 4rem 2rem; }
+      .testimonials-grid { grid-template-columns: 1fr; }
+      .footer-grid { grid-template-columns: 1fr 1fr; gap: 2rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="navbar">
+  <a href="index.html" class="nav-logo">Ember & Oak</a>
+  <ul class="nav-links">
+    <li><a href="index.html" class="active">Home</a></li>
+    <li><a href="product.html">Menu</a></li>
+    <li><a href="contact.html">Contact</a></li>
+    <li><a href="contact.html">Reservations</a></li>
+  </ul>
+  <a href="contact.html" class="nav-reserve">Reserve a Table</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg-text">EMBER</div>
+  <div class="hero-content">
+    <span class="hero-label">Est. 2018 · Hyderabad</span>
+    <h1>Where Flame <em>Meets</em><br>Artistry</h1>
+    <div class="hero-sub">Fine Dining · Craft Cocktails</div>
+    <div class="hero-divider"></div>
+    <p class="hero-desc">An intimate journey through fire-kissed flavours, curated wines and the timeless theatre of exceptional hospitality.</p>
+    <div class="hero-btns">
+      <a href="product.html" class="btn-primary">Explore the Menu</a>
+      <a href="contact.html" class="btn-outline">Make a Reservation</a>
+    </div>
+  </div>
+  <div class="scroll-hint">
+    <div class="scroll-line"></div>
+    <span>Scroll</span>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section>
+  <div class="about">
+    <div class="about-text">
+      <span class="section-label">Our Story</span>
+      <h2 class="section-title">Crafted with<br><em>Passion & Fire</em></h2>
+      <div class="gold-line"></div>
+      <p>Ember & Oak was born from a singular obsession: to serve food that tells a story. Chef Arjun Mehta trained across three continents before returning home to create a restaurant that honours the soul of Indian cuisine while embracing the world.</p>
+      <p>Every dish is a study in contrast — the char of the grill against the velvet of a slow braise, the heat of spice tempered by the cool clarity of fresh herbs.</p>
+      <div class="about-stats">
+        <div>
+          <div class="stat-num">12+</div>
+          <div class="stat-label">Years of Craft</div>
+        </div>
+        <div>
+          <div class="stat-num">48</div>
+          <div class="stat-label">Seats Available</div>
+        </div>
+        <div>
+          <div class="stat-num">3</div>
+          <div class="stat-label">Award Wins</div>
+        </div>
+        <div>
+          <div class="stat-num">200+</div>
+          <div class="stat-label">Wine Labels</div>
+        </div>
+      </div>
+    </div>
+    <div class="about-visual">
+      <div class="about-img-box"></div>
+      <div class="about-badge">
+        <span>#1</span>
+        <span>Fine Dining</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SPECIALS -->
+<section class="specials-section">
+  <div class="specials-header">
+    <span class="section-label">Tonight's Selection</span>
+    <h2 class="section-title">Chef's <em>Specials</em></h2>
+    <div class="gold-line"></div>
+    <p style="color:var(--muted); max-width:500px; margin:0 auto; font-size:1.05rem;">A curated trio of dishes celebrating the season's finest ingredients, prepared fresh each evening.</p>
+  </div>
+  <div class="specials-grid">
+    <div class="special-card">
+      <div class="special-tag">Chef's Pick</div>
+      <span class="special-emoji">🥩</span>
+      <h3>Coal-Roasted Lamb Chop</h3>
+      <p>Heritage rack, black garlic jus, smoked aubergine purée and charred broccolini.</p>
+      <div class="special-price">₹ 2,400</div>
+    </div>
+    <div class="special-card">
+      <span class="special-emoji">🐟</span>
+      <h3>Malabar Sea Bass</h3>
+      <p>Wild-caught bass, coconut beurre blanc, raw mango salsa, crispy curry leaf.</p>
+      <div class="special-price">₹ 1,950</div>
+    </div>
+    <div class="special-card">
+      <div class="special-tag">Seasonal</div>
+      <span class="special-emoji">🍄</span>
+      <h3>Wild Mushroom Risotto</h3>
+      <p>Porcini & truffle risotto, aged Parmesan foam, toasted pine nuts, micro herbs.</p>
+      <div class="special-price">₹ 1,600</div>
+    </div>
+  </div>
+  <a href="product.html" class="btn-primary">View Full Menu</a>
+</section>
+
+<!-- EXPERIENCE -->
+<div class="experience-section">
+  <div class="exp-left">
+    <span class="section-label">The Experience</span>
+    <h2 class="section-title">More Than<br><em>a Meal</em></h2>
+    <div class="gold-line"></div>
+    <div class="exp-features">
+      <div class="exp-feature">
+        <span class="exp-icon">🍷</span>
+        <div>
+          <h4>Sommelier Service</h4>
+          <p>Our in-house sommelier curates pairings from an award-winning cellar of 200+ labels.</p>
+        </div>
+      </div>
+      <div class="exp-feature">
+        <span class="exp-icon">🕯️</span>
+        <div>
+          <h4>Private Dining</h4>
+          <p>Intimate rooms for celebrations, proposals and executive dinners. Fully customisable.</p>
+        </div>
+      </div>
+      <div class="exp-feature">
+        <span class="exp-icon">🎵</span>
+        <div>
+          <h4>Live Jazz Fridays</h4>
+          <p>Every Friday evening, live jazz transforms the dining room into something magical.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="exp-right">
+    <span class="section-label">Opening Hours</span>
+    <h2 class="section-title" style="color:var(--bg);">We Are<br>Open</h2>
+    <div class="gold-line" style="background:var(--bg);"></div>
+    <div class="hours-grid">
+      <div class="hour-item">
+        <div class="hour-day">Monday – Thursday</div>
+        <div class="hour-time">6:00 PM – 11:00 PM</div>
+      </div>
+      <div class="hour-item">
+        <div class="hour-day">Friday – Saturday</div>
+        <div class="hour-time">6:00 PM – 12:00 AM</div>
+      </div>
+      <div class="hour-item">
+        <div class="hour-day">Sunday</div>
+        <div class="hour-time">12:00 PM – 10:00 PM</div>
+      </div>
+      <div class="hour-item">
+        <div class="hour-day">Lunch Service</div>
+        <div class="hour-time">Fri – Sun only</div>
+      </div>
+    </div>
+    <a href="contact.html" class="btn-primary" style="margin-top:2.5rem; background:var(--bg); color:var(--gold); display:inline-block;">Book Your Table</a>
+  </div>
+</div>
+
+<!-- TESTIMONIALS -->
+<section class="testimonials-section">
+  <span class="section-label">Guest Voices</span>
+  <h2 class="section-title">What Our <em>Guests</em> Say</h2>
+  <div class="gold-line"></div>
+  <div class="testimonials-grid">
+    <div class="testi-card">
+      <span class="testi-quote">"</span>
+      <div class="testi-stars">★★★★★</div>
+      <p>An extraordinary evening from the first amuse-bouche to the final petit four. Ember & Oak has redefined what fine dining means in this city.</p>
+      <div class="testi-author">— Priya Nair, Food Critic</div>
+    </div>
+    <div class="testi-card">
+      <span class="testi-quote">"</span>
+      <div class="testi-stars">★★★★★</div>
+      <p>The lamb chop is the finest piece of meat I have ever consumed. The sommelier's pairing was inspired. We will be returning monthly.</p>
+      <div class="testi-author">— Rajan Krishnamurthy</div>
+    </div>
+    <div class="testi-card">
+      <span class="testi-quote">"</span>
+      <div class="testi-stars">★★★★★</div>
+      <p>We held our anniversary dinner in the private room — flowers, custom menu, impeccable service. A memory we will cherish forever.</p>
+      <div class="testi-author">— Sunita & Vikram Shah</div>
+    </div>
+  </div>
+</section>
+
+<!-- NEWSLETTER -->
+<section class="newsletter-section">
+  <span class="section-label">Stay in Touch</span>
+  <h2 class="section-title">Join Our <em>Inner Circle</em></h2>
+  <p>Be first to hear about seasonal menus, private events and exclusive wine dinners.</p>
+  <form class="newsletter-form" onsubmit="return false;">
+    <input type="email" placeholder="Your email address" />
+    <button type="submit">Subscribe</button>
+  </form>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="index.html" class="nav-logo">Ember & Oak</a>
+      <p>A celebration of fire, craft and the art of gathering. Located in the heart of Hyderabad.</p>
+      <div class="footer-social">
+        <span class="social-btn">f</span>
+        <span class="social-btn">in</span>
+        <span class="social-btn">tw</span>
+        <span class="social-btn">ig</span>
+      </div>
+    </div>
+    <div class="footer-col">
+      <h4>Navigate</h4>
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="product.html">Menu</a></li>
+        <li><a href="contact.html">Contact</a></li>
+        <li><a href="contact.html">Reservations</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Dining</h4>
+      <ul>
+        <li><a href="#">Private Events</a></li>
+        <li><a href="#">Wine Cellar</a></li>
+        <li><a href="#">Chef's Table</a></li>
+        <li><a href="#">Gift Cards</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Find Us</h4>
+      <ul>
+        <li><a href="#">12 Jubilee Hills,<br>Hyderabad – 500033</a></li>
+        <li><a href="#">+91 40 4567 8900</a></li>
+        <li><a href="#">hello@emberandoak.in</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2026 Ember & Oak. All rights reserved.</p>
+    <p>Privacy Policy · Terms of Service</p>
+  </div>
+</footer>
+
+<script>
+  const nav = document.getElementById('navbar');
+  window.addEventListener('scroll', () => {
+    nav.classList.toggle('scrolled', window.scrollY > 60);
+  });
+</script>
+</body>
+</html>
