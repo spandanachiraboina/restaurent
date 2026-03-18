@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Menu – Ember & Oak</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:wght@300;400;500&family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg: #0d0b08; --surface: #141209;
+      --gold: #c9a84c; --gold-light: #e8c97a;
+      --cream: #f5ede0; --muted: #7a6e5f;
+      --text: #e8ddd0; --accent: #8b3a2a;
+    }
+    html { scroll-behavior: smooth; }
+    body { background: var(--bg); color: var(--text); font-family: 'Cormorant Garamond', serif; overflow-x: hidden; }
+
+    /* NAV */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.5rem 4rem;
+      background: rgba(13,11,8,0.97);
+      border-bottom: 1px solid rgba(201,168,76,0.15);
+    }
+    .nav-logo { font-family: 'Playfair Display', serif; font-size: 1.6rem; color: var(--gold); text-decoration: none; letter-spacing: 2px; }
+    .nav-links { display: flex; gap: 2.5rem; list-style: none; }
+    .nav-links a { font-family: 'Montserrat', sans-serif; font-size: 0.75rem; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--text); text-decoration: none; transition: color 0.3s; }
+    .nav-links a:hover, .nav-links a.active { color: var(--gold); }
+    .nav-reserve { font-family: 'Montserrat', sans-serif; font-size: 0.7rem; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--bg); background: var(--gold); border: none; padding: 0.65rem 1.5rem; cursor: pointer; transition: background 0.3s; text-decoration: none; }
+    .nav-reserve:hover { background: var(--gold-light); }
+
+    /* PAGE HEADER */
+    .page-header {
+      min-height: 45vh;
+      display: flex; align-items: flex-end;
+      padding: 0 4rem 4rem;
+      background: linear-gradient(135deg, #1a0e06, #0d0b08);
+      border-bottom: 1px solid rgba(201,168,76,0.1);
+      position: relative;
+      overflow: hidden;
+      margin-top: 80px;
+    }
+    .page-header::before {
+      content: 'MENU';
+      position: absolute;
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(8rem, 20vw, 20rem);
+      color: rgba(201,168,76,0.04);
+      right: -2rem; bottom: -2rem;
+      line-height: 1;
+      pointer-events: none;
+    }
+    .page-header-content { max-width: 600px; }
+    .section-label { font-family: 'Montserrat', sans-serif; font-size: 0.65rem; font-weight: 600; letter-spacing: 5px; text-transform: uppercase; color: var(--gold); margin-bottom: 1rem; display: block; }
+    .page-header h1 { font-family: 'Playfair Display', serif; font-size: clamp(3rem, 6vw, 5.5rem); color: var(--cream); font-weight: 400; line-height: 1.1; }
+    .page-header h1 em { font-style: italic; color: var(--gold); }
+    .page-header p { margin-top: 1.2rem; font-size: 1.1rem; color: var(--muted); line-height: 1.7; }
+
+    /* FILTER TABS */
+    .menu-filters {
+      position: sticky; top: 80px; z-index: 50;
+      background: var(--surface);
+      border-bottom: 1px solid rgba(201,168,76,0.1);
+      padding: 0 4rem;
+      display: flex; gap: 0; overflow-x: auto;
+    }
+    .filter-btn {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.68rem; font-weight: 600; letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      background: none; border: none; border-bottom: 2px solid transparent;
+      padding: 1.2rem 2rem;
+      cursor: pointer;
+      transition: all 0.3s;
+      white-space: nowrap;
+    }
+    .filter-btn:hover { color: var(--text); }
+    .filter-btn.active { color: var(--gold); border-bottom-color: var(--gold); }
+
+    /* MENU SECTION */
+    .menu-section { padding: 5rem 4rem; }
+    .menu-category { display: none; }
+    .menu-category.active { display: block; }
+
+    .category-header { margin-bottom: 3rem; }
+    .category-header h2 { font-family: 'Playfair Display', serif; font-size: clamp(2rem, 4vw, 3rem); color: var(--cream); }
+    .category-header h2 em { color: var(--gold); font-style: italic; }
+    .gold-line { width: 50px; height: 1px; background: var(--gold); margin: 1.2rem 0 1.5rem; }
+    .category-header p { font-size: 1.05rem; color: var(--muted); max-width: 550px; line-height: 1.7; }
+
+    .menu-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2px; }
+
+    .menu-item {
+      background: var(--surface);
+      padding: 2rem 2.5rem;
+      display: flex; justify-content: space-between; align-items: flex-start;
+      gap: 2rem;
+      border-left: 2px solid transparent;
+      transition: border-color 0.3s, background 0.3s;
+      cursor: default;
+    }
+    .menu-item:hover { border-left-color: var(--gold); background: #181410; }
+    .item-info { flex: 1; }
+    .item-header { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 0.5rem; }
+    .item-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.2rem; color: var(--cream);
+    }
+    .item-badge {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.5rem; letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 0.2rem 0.5rem;
+      background: var(--accent); color: var(--cream);
+    }
+    .item-badge.veg { background: #2a5c2a; }
+    .item-desc { font-size: 0.95rem; color: var(--muted); line-height: 1.7; max-width: 380px; }
+    .item-allergens {
+      margin-top: 0.6rem;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.58rem; letter-spacing: 1px; text-transform: uppercase;
+      color: rgba(122,110,95,0.6);
+    }
+    .item-price {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.5rem; color: var(--gold);
+      white-space: nowrap; flex-shrink: 0;
+    }
+
+    /* TASTING MENU */
+    .tasting-section {
+      background: linear-gradient(135deg, #1a0e06, var(--surface));
+      padding: 5rem 4rem;
+      margin: 0 4rem;
+      border: 1px solid rgba(201,168,76,0.15);
+      position: relative;
+      overflow: hidden;
+    }
+    .tasting-section::before {
+      content: '7';
+      position: absolute;
+      font-family: 'Playfair Display', serif;
+      font-size: 30rem; color: rgba(201,168,76,0.03);
+      right: -3rem; top: -4rem; line-height: 1;
+    }
+    .tasting-inner { max-width: 700px; position: relative; z-index: 1; }
+    .tasting-courses {
+      margin: 2.5rem 0;
+      display: flex; flex-direction: column; gap: 0;
+    }
+    .course-row {
+      display: grid; grid-template-columns: 40px 1fr auto;
+      gap: 1.5rem; align-items: center;
+      padding: 1.5rem 0;
+      border-bottom: 1px solid rgba(201,168,76,0.08);
+    }
+    .course-num {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.5rem; color: rgba(201,168,76,0.3);
+    }
+    .course-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.1rem; color: var(--cream);
+    }
+    .course-detail { font-size: 0.9rem; color: var(--muted); margin-top: 0.2rem; }
+    .course-dot {
+      width: 6px; height: 6px;
+      background: var(--gold); border-radius: 50%;
+    }
+    .tasting-price { margin-top: 2rem; }
+    .tasting-price span { font-family: 'Playfair Display', serif; font-size: 3rem; color: var(--gold); }
+    .tasting-price p { font-size: 0.85rem; color: var(--muted); margin-top: 0.3rem; }
+    .btn-primary { font-family: 'Montserrat', sans-serif; font-size: 0.72rem; font-weight: 600; letter-spacing: 2.5px; text-transform: uppercase; background: var(--gold); color: var(--bg); border: none; padding: 1rem 2.5rem; cursor: pointer; text-decoration: none; transition: all 0.3s; display: inline-block; margin-top: 1.5rem; }
+    .btn-primary:hover { background: var(--gold-light); }
+
+    /* WINE PAIRING */
+    .pairing-section {
+      padding: 5rem 4rem;
+      text-align: center;
+    }
+    .pairing-section .gold-line { margin: 1.5rem auto; }
+    .pairing-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 2rem; max-width: 1000px; margin: 3rem auto 0;
+    }
+    .wine-card {
+      border: 1px solid rgba(201,168,76,0.12);
+      padding: 2rem 1.5rem;
+      transition: border-color 0.3s, transform 0.3s;
+    }
+    .wine-card:hover { border-color: var(--gold); transform: translateY(-4px); }
+    .wine-emoji { font-size: 2rem; margin-bottom: 1rem; display: block; }
+    .wine-card h4 { font-family: 'Playfair Display', serif; font-size: 1.05rem; color: var(--cream); margin-bottom: 0.5rem; }
+    .wine-card p { font-size: 0.88rem; color: var(--muted); line-height: 1.6; margin-bottom: 1rem; }
+    .wine-price { font-family: 'Cormorant Garamond', serif; font-size: 1.3rem; color: var(--gold); }
+
+    /* FOOTER */
+    footer { background: #080705; padding: 4rem 4rem 2rem; border-top: 1px solid rgba(201,168,76,0.1); }
+    .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 4rem; margin-bottom: 3rem; }
+    .footer-brand .nav-logo { display: block; font-size: 1.8rem; margin-bottom: 1rem; }
+    .footer-brand p { font-size: 0.95rem; color: var(--muted); line-height: 1.8; max-width: 260px; }
+    .footer-col h4 { font-family: 'Montserrat', sans-serif; font-size: 0.65rem; letter-spacing: 3px; text-transform: uppercase; color: var(--gold); margin-bottom: 1.5rem; }
+    .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 0.8rem; }
+    .footer-col a { color: var(--muted); text-decoration: none; font-size: 0.95rem; transition: color 0.3s; }
+    .footer-col a:hover { color: var(--gold); }
+    .footer-bottom { border-top: 1px solid rgba(255,255,255,0.05); padding-top: 2rem; display: flex; justify-content: space-between; }
+    .footer-bottom p { font-family: 'Montserrat', sans-serif; font-size: 0.65rem; letter-spacing: 1px; color: var(--muted); }
+
+    @media (max-width: 900px) {
+      nav { padding: 1.2rem 2rem; }
+      .nav-links { display: none; }
+      .menu-filters { padding: 0 1rem; }
+      .menu-section, .tasting-section, .pairing-section { padding: 4rem 1.5rem; }
+      .tasting-section { margin: 0 1.5rem; }
+      .page-header { padding: 0 2rem 3rem; }
+      .menu-grid { grid-template-columns: 1fr; }
+      .pairing-grid { grid-template-columns: 1fr 1fr; }
+      .footer-grid { grid-template-columns: 1fr 1fr; gap: 2rem; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">Ember & Oak</a>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="product.html" class="active">Menu</a></li>
+    <li><a href="contact.html">Contact</a></li>
+    <li><a href="contact.html">Reservations</a></li>
+  </ul>
+  <a href="contact.html" class="nav-reserve">Reserve a Table</a>
+</nav>
+
+<div class="page-header">
+  <div class="page-header-content">
+    <span class="section-label">Culinary Journey</span>
+    <h1>Our <em>Menu</em></h1>
+    <p>Dishes conceived with intention, prepared with fire, and served with care. All ingredients are locally sourced and seasonally adjusted.</p>
+  </div>
+</div>
+
+<!-- FILTERS -->
+<div class="menu-filters">
+  <button class="filter-btn active" onclick="showCategory('starters')">Starters</button>
+  <button class="filter-btn" onclick="showCategory('mains')">Mains</button>
+  <button class="filter-btn" onclick="showCategory('vegetarian')">Vegetarian</button>
+  <button class="filter-btn" onclick="showCategory('desserts')">Desserts</button>
+  <button class="filter-btn" onclick="showCategory('cocktails')">Cocktails</button>
+</div>
+
+<!-- MENU ITEMS -->
+<div class="menu-section">
+
+  <!-- STARTERS -->
+  <div class="menu-category active" id="starters">
+    <div class="category-header">
+      <span class="section-label">To Begin</span>
+      <h2>Starters & <em>Small Plates</em></h2>
+      <div class="gold-line"></div>
+      <p>Light, vibrant beginnings that awaken the palate. Each starter is designed to intrigue and prepare the senses for what follows.</p>
+    </div>
+    <div class="menu-grid">
+      <div class="menu-item">
+        <div class="item-info">
+          <div class="item-header"><span class="item-name">Oyster & Pearl</span><span class="item-badge">Signature</span></div>
+          <p class="item-desc">Kumamoto oysters, finger lime caviar, champagne mignonette and micro shiso.</p>
+          <p class="item-allergens">Contains: Shellfish, Alcohol</p>
+        </div>
+        <div class="item-price">₹ 980</div>
+      </div>
+      <div class="menu-item">
+        <div class="item-info">
+          <div class="item-header"><span class="item-name">Smoked Duck Salad</span></div>
+          <p class="item-desc">Tea-smoked duck breast, lychee, watercress, toasted hazelnuts, aged balsamic.</p>
+          <p class="item-allergens">Contains: Nuts, Soy</p>
+        </div>
+        <div class="item-price">₹ 850</div>
+      </div>
+      <div class="menu-item">
+        <div class="item-info">
+          <div class="item-header"><span class="item-name">Burrata Caprese</span><span class="item-badge veg">V</span></div>
+          <p class="item-desc">Fresh burrata, heritage tomatoes, basil oil, aged balsamic, Maldon sea salt.</p>
+          <p class="item-allergens">Contains: Dairy, Gluten</p>
+        </div>
+        <div class="item-price">₹ 720</div>
+      </div>
+      <div class="menu-item">
+        <div class="item-info">
+          <div class="item-header"><span class="item-name">Prawn Cocktail Redux</span><span class="item-badge">Seasonal</span></div>
+          <p class="item-desc">Tiger prawns, house Marie Rose, avocado mousse, crispy pancetta, dill oil.</p>
+          <p class="item-allergens">Contains: Shellfish, Eggs, Dairy</p>
+        </div>
+        <div class="item-price">₹ 890</div>
+      </div>
+      <div class="menu-item">
+        <div class="item-info">
+          <div class="item-header"><span class="item-name">Chicken Liver Parfait</span></div>
+          <p class="item-desc">Silky parfait, Sauternes jelly, toasted brioche, cornichon, pickled shallots.</p>
+          <p class="item-allergens">Contains: Dairy, Gluten, Alcohol</p>
+        </div>
+        <div class="item-price">₹ 760</div>
+      </div>
+      <div class="menu-item">
+        <div class="item-info">
+          <div class="item-header"><span class="item-name">Soup of the Day</span><span class="item-badge veg">V</span></div>
+          <p class="item-desc">Ask your server for today's artisan soup, always crafted from seasonal produce.</p>
+          <p class="item-allergens">Allergens vary by preparation</p>
+        </div>
+        <div class="item-price">₹ 520</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAINS -->
+  <div class="menu-category" id="mains">
+    <div class="category-header">
+      <span class="section-label">The Heart</span>
+      <h2>Main <em>Courses</em></h2>
+      <div class="gold-line"></div>
+      <p>Where the craft of the kitchen truly reveals itself. Every main course is a considered composition of fire, texture and flavour.</p>
+    </div>
+    <div class="menu-grid">
+      <div class="menu-item">
+        <div class="item-info">
+          <div class="item-header"><span class="item-name">Coal-Roasted Lamb Chop</span><span class="item-badge">Signature</span></div>
+          <p class="item-desc">Heritage rack, black garlic jus, smoked aubergine purée, charred broccolini, rosemary crumb.</p>
+          <p class="item-allergens">Contains: Gluten, Dairy</p>
+        </div>
+        <div class="item-price">₹ 2,400</div>
+      </div>
+      <div class="menu-item">
+        <div class="item-info">
+          <div class="item-header"><span class="item-name">Malabar Sea Bass</span><span class="item-badge">Chef's Pick</span></div>
+          <p class="item-desc">Wild-caught bass, coconut beurre blanc, raw mango salsa, crispy curry leaf, turmeric rice.</p>
+          <p class="item-allergens">Contains: Fish, Dairy</p>
+        </div>
+        <div class="item-price">₹ 1,950</div>
+      </div>
+      <div class="menu-item">
+        <div class="item-info">
+          <div class="item-header"><span class="item-name">Wagyu Striploin</span><span class="item-badge">Premium</span></div>
+          <p class="item-desc">200g Wagyu MBS 7+, truffle butter, bone marrow jus, hasselback potato, watercress.</p>
+          <p class="item-allergens">Contains: Dairy, Gluten</p>
+        </div>
+        <div class="item-price">₹ 4,800</div>
+      </div>
+      <div class="menu-item">
+        <div class="item-info">
+          <div class="item-header"><span class="item-name">Seared Duck Breast</span></div>
+          <p class="item-desc">Magret duck, cherry reduction, celeriac purée, pommes dauphine, crispy skin.</p>
+          <p class="item-allergens">Contains: Dairy, Gluten</p>
+        </div>
+        <div class="item-price">₹ 2,100</div>
+      </div>
+      <div class="menu-item">
+        <div class="item-info">
+          <div class="item-header"><span class="item-name">Slow-Braised Short Rib</span></div>
+          <p class="item-desc">72-hour beef short rib, gremolata, creamed polenta, roasted root vegetables, horseradish.</p>
+          <p class="item-allergens">Contains: Dairy, Celery</p>
+        </div>
+        <div class="item-price">₹ 2,650</div>
+      </div>
+      <div class="menu-item">
+        <div class="item-info">
+          <div class="item-header"><span class="item-name">Lobster Thermidor</span><span class="item-badge">Seasonal</span></div>
+          <p class="item-desc">Half Canadian lobster, cognac cream, Gruyère, tarragon, pommes frites.</p>
+          <p class="item-allergens">Contains: Shellfish, Dairy, Alcohol</p>
+        </div>
+        <div class="item-price">₹ 3,200</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VEGETARIAN -->
+  <div class="menu-category" id="vegetarian">
+    <div class="category-header">
+      <span class="section-label">Garden & Earth</span>
+      <h2>Vegetarian <em>Creations</em></h2>
+      <div class="gold-line"></div>
+      <p>Plant-forward dishes conceived with the same ambition and precision as every other course on our menu. Bold, seasonal, memorable.</p>
+    </div>
+    <div class="menu-grid">
+      <div class="menu-item">
+        <div class="item-info">
+          <div class="item-header"><span class="item-name">Wild Mushroom Risotto</span><span class="item-badge veg">V</span></div>
+          <p class="item-desc">Porcini & truffle risotto, aged Parmesan foam, toasted pine nuts, micro herbs, truffle oil.</p>
+          <p class="item-allergens">Contains: Dairy, Nuts, Gluten</p>
+        </div>
+        <div class="item-price">₹ 1,600</div>
+      </div>
+      <div class="menu-item">
+        <div class="item-info">
+          <div class="item-header"><span class="item-name">Beetroot Wellington</span><span class="item-badge veg">V</span></div>
+          <p class="item-desc">Golden & candy beetroot, Puy lentil & walnut duxelles, puff pastry, tarragon cream.</p>
+          <p class="item-allergens">Contains: Gluten, Nuts, Dairy</p>
+        </div>
+        <div class="item-price">₹ 1,450</div>
+      </div>
+      <div class="menu-item">
+        <div class="item-info">
+          <div class="item-header"><span class="item-name">Cauliflower Steak</span><span class="item-badge veg">VG</span></div>
+          <p class="item-desc">Miso-glazed cauliflower, harrissa, chickpea panisse, pomegranate, toasted almonds.</p>
+          <p class="item-allergens">Contains: Soy, Nuts</p>
+        </div>
+        <div class="item-price">₹ 1,350</div>
+      </div>
+      <div class="menu-item">
+        <div class="item-info">
+          <div class="item-header"><span class="item-name">Paneer Tikka Royale</span><span class="item-badge">Signature</span></div>
+          <p class="item-desc">Tandoor-kissed paneer, charred peppers, saffron cream, pickled radish, cumin oil.</p>
+          <p class="item-allergens">Contains: Dairy</p>
+        </div>
+        <div class="item-price">₹ 1,400</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DESSERTS -->
+  <div class="menu-category" id="desserts">
+    <div class="category-header">
+      <span class="section-label">The Finale</span>
+      <h2>Desserts & <em>Petit Fours</em></h2>
+      <div class="gold-line"></div>
+      <p>The sweet conclusion to your evening. Desserts crafted by our pastry team are an experience unto themselves.</p>
+    </div>
+    <div class="menu-grid">
+      <div class="menu-item">
+        <div class="item-info">
+          <div class="item-header"><span class="item-name">Valrhona Chocolate Sphere</span><span class="item-badge">Signature</span></div>
+          <p class="item-desc">Dark chocolate shell melted tableside with warm caramel, praline mousse, gold leaf.</p>
+          <p class="item-allergens">Contains: Dairy, Eggs, Gluten, Nuts</p>
+        </div>
+        <div class="item-price">₹ 980</div>
+      </div>
+      <div class="menu-item">
+        <div class="item-info">
+          <div class="item-header"><span class="item-name">Cardamom Crème Brûlée</span><span class="item-badge veg">V</span></div>
+          <p class="item-desc">Classic custard infused with green cardamom, caramelised top, rose petal tuile.</p>
+          <p class="item-allergens">Contains: Dairy, Eggs</p>
+        </div>
+        <div class="item-price">₹ 720</div>
+      </div>
+      <div class="menu-item">
+        <div class="item-info">
+          <div class="item-header"><span class="item-name">Pistachio Baklava Tart</span></div>
+          <p class="item-desc">Filo pastry, orange blossom honey, pistachio frangipane, saffron ice cream.</p>
+          <p class="item-allergens">Contains: Gluten, Nuts, Dairy, Eggs</p>
+        </div>
+        <div class="item-price">₹ 840</div>
+      </div>
+      <div class="menu-item">
+        <div class="item-info">
+          <div class="item-header"><span class="item-name">Cheese & Accompaniments</span></div>
+          <p class="item-desc">Selection of artisan cheeses, quince jelly, house crackers, fresh grapes, honeycomb.</p>
+          <p class="item-allergens">Contains: Dairy, Gluten</p>
+        </div>
+        <div class="item-price">₹ 1,100</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COCKTAILS -->
+  <div class="menu-category" id="cocktails">
+    <div class="category-header">
+      <span class="section-label">Liquid Craft</span>
+      <h2>Cocktails & <em>Spirits</em></h2>
+      <div class="gold-line"></div>
+      <p>Our bar team conjures cocktails that are equal parts flavour and theatre. Each drink is a story in a glass.</p>
+    </div>
+    <div class="menu-grid">
+      <div class="menu-item">
+        <div class="item-info">
+          <div class="item-header"><span class="item-name">Ember Smoked Old Fashioned</span><span class="item-badge">Signature</span></div>
+          <p class="item-desc">Whisky, demerara, bitters, orange peel, served under a cloche of hickory smoke.</p>
+          <p class="item-allergens">Contains: Alcohol</p>
+        </div>
+        <div class="item-price">₹ 850</div>
+      </div>
+      <div class="menu-item">
+        <div class="item-info">
+          <div class="item-header"><span class="item-name">Mango Saffron Martini</span></div>
+          <p class="item-desc">Vodka, Alphonso mango, saffron tincture, lemon juice, chilli salt rim.</p>
+          <p class="item-allergens">Contains: Alcohol</p>
+        </div>
+        <div class="item-price">₹ 780</div>
+      </div>
+      <div class="menu-item">
+        <div class="item-info">
+          <div class="item-header"><span class="item-name">Cardamom Negroni</span></div>
+          <p class="item-desc">Gin, Campari, sweet vermouth, cardamom pod infusion, orange zest.</p>
+          <p class="item-allergens">Contains: Alcohol</p>
+        </div>
+        <div class="item-price">₹ 820</div>
+      </div>
+      <div class="menu-item">
+        <div class="item-info">
+          <div class="item-header"><span class="item-name">Virgin Spiced Garden</span><span class="item-badge veg">N/A</span></div>
+          <p class="item-desc">Fresh cucumber, mint, ginger, lime, sparkling elderflower, house syrups.</p>
+          <p class="item-allergens">Non-alcoholic</p>
+        </div>
+        <div class="item-price">₹ 480</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- TASTING MENU -->
+<div class="tasting-section">
+  <div class="tasting-inner">
+    <span class="section-label">The Pinnacle Experience</span>
+    <h2 style="font-family:'Playfair Display',serif; font-size:clamp(2rem,4vw,3rem); color:var(--cream);">The 7-Course <em style="color:var(--gold);font-style:italic;">Tasting Menu</em></h2>
+    <div class="gold-line"></div>
+    <p style="color:var(--muted); font-size:1.05rem; max-width:500px; line-height:1.7;">Chef Arjun Mehta's personal journey through fire and flavour. The full expression of Ember & Oak's philosophy, served in seven thoughtfully sequenced acts.</p>
+    <div class="tasting-courses">
+      <div class="course-row"><span class="course-num">I</span><div><div class="course-name">Amuse-Bouche</div><div class="course-detail">Chef's surprise opening</div></div><span class="course-dot"></span></div>
+      <div class="course-row"><span class="course-num">II</span><div><div class="course-name">Cold Starter</div><div class="course-detail">Oyster & Pearl</div></div><span class="course-dot"></span></div>
+      <div class="course-row"><span class="course-num">III</span><div><div class="course-name">Warm Starter</div><div class="course-detail">Smoked Bone Marrow Toast</div></div><span class="course-dot"></span></div>
+      <div class="course-row"><span class="course-num">IV</span><div><div class="course-name">Palate Cleanser</div><div class="course-detail">Yuzu & Ginger Sorbet</div></div><span class="course-dot"></span></div>
+      <div class="course-row"><span class="course-num">V</span><div><div class="course-name">Main Course</div><div class="course-detail">Coal-Roasted Lamb Chop</div></div><span class="course-dot"></span></div>
+      <div class="course-row"><span class="course-num">VI</span><div><div class="course-name">Pre-Dessert</div><div class="course-detail">Cardamom Panna Cotta</div></div><span class="course-dot"></span></div>
+      <div class="course-row"><span class="course-num">VII</span><div><div class="course-name">Dessert & Mignardises</div><div class="course-detail">Valrhona Sphere + Petit Fours</div></div><span class="course-dot"></span></div>
+    </div>
+    <div class="tasting-price">
+      <span>₹ 6,500</span>
+      <p>Per person · Wine pairing available at ₹ 3,200 supplement · Advance reservation required</p>
+    </div>
+    <a href="contact.html" class="btn-primary">Reserve for Tasting Menu</a>
+  </div>
+</div>
+
+<!-- WINE -->
+<section class="pairing-section">
+  <span class="section-label">The Cellar</span>
+  <h2 style="font-family:'Playfair Display',serif; font-size:clamp(2rem,4vw,3rem); color:var(--cream);">Wine <em style="color:var(--gold);font-style:italic;">Selection</em></h2>
+  <div class="gold-line"></div>
+  <p style="color:var(--muted); max-width:500px; margin:0 auto 1rem; font-size:1.05rem;">Our sommelier has assembled a cellar of 200+ labels. A highlight selection below — ask your server for the complete wine list.</p>
+  <div class="pairing-grid">
+    <div class="wine-card"><span class="wine-emoji">🥂</span><h4>Champagne</h4><p>Moët & Chandon Brut NV, Pol Roger Blanc de Blancs</p><div class="wine-price">From ₹ 4,200</div></div>
+    <div class="wine-card"><span class="wine-emoji">🍷</span><h4>Red Wines</h4><p>Barolo, Côtes du Rhône, Malbec, Napa Cabernet</p><div class="wine-price">From ₹ 1,800</div></div>
+    <div class="wine-card"><span class="wine-emoji">🥃</span><h4>White Wines</h4><p>Burgundy Chardonnay, Marlborough Sauvignon, Riesling</p><div class="wine-price">From ₹ 1,600</div></div>
+    <div class="wine-card"><span class="wine-emoji">🌹</span><h4>Rosé & Dessert</h4><p>Provence Rosé, Sauternes, Tawny Port, Moscato d'Asti</p><div class="wine-price">From ₹ 1,400</div></div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="index.html" class="nav-logo">Ember & Oak</a>
+      <p>A celebration of fire, craft and the art of gathering. Located in Hyderabad.</p>
+    </div>
+    <div class="footer-col"><h4>Navigate</h4><ul><li><a href="index.html">Home</a></li><li><a href="product.html">Menu</a></li><li><a href="contact.html">Contact</a></li></ul></div>
+    <div class="footer-col"><h4>Dining</h4><ul><li><a href="#">Private Events</a></li><li><a href="#">Chef's Table</a></li><li><a href="#">Gift Cards</a></li></ul></div>
+    <div class="footer-col"><h4>Find Us</h4><ul><li><a href="#">12 Jubilee Hills, Hyderabad – 500033</a></li><li><a href="#">+91 40 4567 8900</a></li></ul></div>
+  </div>
+  <div class="footer-bottom"><p>© 2026 Ember & Oak. All rights reserved.</p><p>Allergen info available on request</p></div>
+</footer>
+
+<script>
+  function showCategory(id) {
+    document.querySelectorAll('.menu-category').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.filter-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    event.target.classList.add('active');
+    document.querySelector('.menu-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+</script>
+</body>
+</html>
