@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Contact & Reservations – Ember & Oak</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:wght@300;400;500&family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg: #0d0b08; --surface: #141209;
+      --gold: #c9a84c; --gold-light: #e8c97a;
+      --cream: #f5ede0; --muted: #7a6e5f;
+      --text: #e8ddd0; --accent: #8b3a2a;
+      --error: #c0392b; --success: #27ae60;
+    }
+    html { scroll-behavior: smooth; }
+    body { background: var(--bg); color: var(--text); font-family: 'Cormorant Garamond', serif; overflow-x: hidden; }
+
+    /* NAV */
+    nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; padding: 1.5rem 4rem; background: rgba(13,11,8,0.97); border-bottom: 1px solid rgba(201,168,76,0.15); }
+    .nav-logo { font-family: 'Playfair Display', serif; font-size: 1.6rem; color: var(--gold); text-decoration: none; letter-spacing: 2px; }
+    .nav-links { display: flex; gap: 2.5rem; list-style: none; }
+    .nav-links a { font-family: 'Montserrat', sans-serif; font-size: 0.75rem; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--text); text-decoration: none; transition: color 0.3s; }
+    .nav-links a:hover, .nav-links a.active { color: var(--gold); }
+    .nav-reserve { font-family: 'Montserrat', sans-serif; font-size: 0.7rem; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--bg); background: var(--gold); border: none; padding: 0.65rem 1.5rem; cursor: pointer; transition: background 0.3s; text-decoration: none; }
+    .nav-reserve:hover { background: var(--gold-light); }
+
+    /* PAGE HEADER */
+    .page-header { min-height: 45vh; display: flex; align-items: flex-end; padding: 0 4rem 4rem; background: linear-gradient(135deg, #1a0e06, #0d0b08); border-bottom: 1px solid rgba(201,168,76,0.1); position: relative; overflow: hidden; margin-top: 80px; }
+    .page-header::before { content: 'CONNECT'; position: absolute; font-family: 'Playfair Display', serif; font-size: clamp(5rem, 14vw, 16rem); color: rgba(201,168,76,0.03); right: -2rem; bottom: -2rem; line-height: 1; pointer-events: none; }
+    .page-header-content { max-width: 650px; }
+    .section-label { font-family: 'Montserrat', sans-serif; font-size: 0.65rem; font-weight: 600; letter-spacing: 5px; text-transform: uppercase; color: var(--gold); margin-bottom: 1rem; display: block; }
+    .page-header h1 { font-family: 'Playfair Display', serif; font-size: clamp(3rem, 6vw, 5.5rem); color: var(--cream); font-weight: 400; line-height: 1.1; }
+    .page-header h1 em { font-style: italic; color: var(--gold); }
+    .page-header p { margin-top: 1.2rem; font-size: 1.1rem; color: var(--muted); line-height: 1.7; }
+
+    /* MAIN LAYOUT */
+    .contact-layout { display: grid; grid-template-columns: 1fr 1.4fr; gap: 0; min-height: 80vh; }
+
+    /* LEFT PANEL */
+    .contact-left {
+      background: linear-gradient(160deg, #1a0e06, var(--surface));
+      padding: 5rem 4rem;
+      border-right: 1px solid rgba(201,168,76,0.1);
+    }
+    .gold-line { width: 50px; height: 1px; background: var(--gold); margin: 1.2rem 0 2rem; }
+
+    .contact-info-blocks { display: flex; flex-direction: column; gap: 2.5rem; margin-top: 1rem; }
+    .info-block { border-left: 1px solid rgba(201,168,76,0.2); padding-left: 1.5rem; }
+    .info-block h4 { font-family: 'Montserrat', sans-serif; font-size: 0.65rem; letter-spacing: 3px; text-transform: uppercase; color: var(--gold); margin-bottom: 0.7rem; }
+    .info-block p { font-size: 1rem; color: var(--text); line-height: 1.7; }
+    .info-block a { color: var(--text); text-decoration: none; transition: color 0.3s; }
+    .info-block a:hover { color: var(--gold); }
+
+    /* HOURS TABLE */
+    .hours-table { margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.6rem; }
+    .hour-row { display: flex; justify-content: space-between; gap: 1rem; }
+    .hour-day { font-size: 0.9rem; color: var(--muted); }
+    .hour-time { font-size: 0.9rem; color: var(--text); }
+
+    /* MAP PLACEHOLDER */
+    .map-placeholder {
+      margin-top: 2.5rem;
+      background: linear-gradient(135deg, #1a1208, #0d0b08);
+      border: 1px solid rgba(201,168,76,0.12);
+      aspect-ratio: 4/3;
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column; gap: 1rem;
+      cursor: pointer;
+      transition: border-color 0.3s;
+      text-decoration: none;
+    }
+    .map-placeholder:hover { border-color: var(--gold); }
+    .map-placeholder span { font-size: 2.5rem; }
+    .map-placeholder p { font-family: 'Montserrat', sans-serif; font-size: 0.65rem; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); }
+
+    /* RIGHT PANEL - FORM */
+    .contact-right { padding: 5rem 4rem; background: var(--bg); }
+    .form-header { margin-bottom: 3rem; }
+    .form-header h2 { font-family: 'Playfair Display', serif; font-size: clamp(2rem, 3.5vw, 2.8rem); color: var(--cream); }
+    .form-header h2 em { color: var(--gold); font-style: italic; }
+    .form-header p { color: var(--muted); font-size: 1rem; margin-top: 0.7rem; }
+
+    /* FORM TABS */
+    .form-tabs { display: flex; gap: 0; margin-bottom: 2.5rem; border-bottom: 1px solid rgba(201,168,76,0.12); }
+    .form-tab { font-family: 'Montserrat', sans-serif; font-size: 0.65rem; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); background: none; border: none; border-bottom: 2px solid transparent; padding: 1rem 1.5rem; cursor: pointer; transition: all 0.3s; }
+    .form-tab:hover { color: var(--text); }
+    .form-tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+
+    .form-panel { display: none; }
+    .form-panel.active { display: block; }
+
+    /* FORM FIELDS */
+    .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
+    .field-full { margin-bottom: 1.5rem; }
+    .field-group { display: flex; flex-direction: column; gap: 0.5rem; }
+    .field-group label { font-family: 'Montserrat', sans-serif; font-size: 0.6rem; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); }
+    .field-group input, .field-group select, .field-group textarea {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(201,168,76,0.2);
+      color: var(--text);
+      padding: 0.9rem 1.2rem;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.3s, background 0.3s;
+      width: 100%;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+    .field-group input:focus, .field-group select:focus, .field-group textarea:focus {
+      border-color: var(--gold);
+      background: rgba(201,168,76,0.04);
+    }
+    .field-group input.error, .field-group select.error { border-color: var(--error); }
+    .field-group .error-msg { font-family: 'Montserrat', sans-serif; font-size: 0.58rem; letter-spacing: 1px; color: var(--error); }
+    .field-group textarea { resize: vertical; min-height: 120px; }
+    select option { background: #1a1208; color: var(--text); }
+
+    /* OCCASION PILLS */
+    .occasion-pills { display: flex; gap: 0.8rem; flex-wrap: wrap; margin-top: 0.5rem; }
+    .pill {
+      font-family: 'Montserrat', sans-serif; font-size: 0.6rem; letter-spacing: 1.5px;
+      text-transform: uppercase; color: var(--muted);
+      border: 1px solid rgba(201,168,76,0.2);
+      padding: 0.4rem 1rem; cursor: pointer;
+      transition: all 0.3s; user-select: none;
+    }
+    .pill:hover { border-color: var(--gold); color: var(--text); }
+    .pill.active { background: var(--gold); color: var(--bg); border-color: var(--gold); }
+
+    /* SUBMIT */
+    .btn-submit {
+      font-family: 'Montserrat', sans-serif; font-size: 0.72rem; font-weight: 600;
+      letter-spacing: 2.5px; text-transform: uppercase;
+      background: var(--gold); color: var(--bg);
+      border: none; padding: 1.1rem 3rem; cursor: pointer;
+      transition: all 0.3s; width: 100%; margin-top: 1rem;
+      position: relative; overflow: hidden;
+    }
+    .btn-submit:hover { background: var(--gold-light); }
+    .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    /* SUCCESS MESSAGE */
+    .success-banner {
+      display: none;
+      background: rgba(39,174,96,0.1);
+      border: 1px solid rgba(39,174,96,0.3);
+      padding: 1.5rem 2rem;
+      margin-top: 1.5rem;
+      text-align: center;
+    }
+    .success-banner.show { display: block; animation: fadeIn 0.5s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .success-banner p { color: #2ecc71; font-size: 1rem; }
+    .success-banner strong { color: var(--gold); font-family: 'Playfair Display', serif; }
+
+    /* INFO CARDS */
+    .info-cards {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 2px; margin: 0;
+    }
+    .info-card {
+      background: var(--surface);
+      padding: 3rem 2.5rem;
+      text-align: center;
+      border-bottom: 2px solid transparent;
+      transition: border-color 0.3s;
+    }
+    .info-card:hover { border-bottom-color: var(--gold); }
+    .info-card-icon { font-size: 2.2rem; margin-bottom: 1rem; display: block; }
+    .info-card h4 { font-family: 'Montserrat', sans-serif; font-size: 0.65rem; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); margin-bottom: 0.8rem; }
+    .info-card p { font-size: 0.95rem; color: var(--muted); line-height: 1.7; }
+
+    /* FAQ */
+    .faq-section { padding: 6rem 4rem; max-width: 900px; margin: 0 auto; }
+    .faq-section h2 { font-family: 'Playfair Display', serif; font-size: clamp(2rem, 4vw, 3rem); color: var(--cream); text-align: center; }
+    .faq-section h2 em { color: var(--gold); font-style: italic; }
+    .faq-section .gold-line { margin: 1.5rem auto; }
+    .faq-list { margin-top: 3rem; display: flex; flex-direction: column; gap: 1px; }
+    .faq-item { border: 1px solid rgba(201,168,76,0.1); overflow: hidden; }
+    .faq-q { display: flex; justify-content: space-between; align-items: center; padding: 1.5rem 2rem; cursor: pointer; transition: background 0.3s; }
+    .faq-q:hover { background: rgba(201,168,76,0.05); }
+    .faq-q span { font-family: 'Playfair Display', serif; font-size: 1.15rem; color: var(--cream); }
+    .faq-toggle { font-size: 1.5rem; color: var(--gold); font-weight: 300; transition: transform 0.3s; flex-shrink: 0; }
+    .faq-item.open .faq-toggle { transform: rotate(45deg); }
+    .faq-a { max-height: 0; overflow: hidden; transition: max-height 0.4s ease, padding 0.3s; }
+    .faq-item.open .faq-a { max-height: 200px; }
+    .faq-a p { padding: 0 2rem 1.5rem; font-size: 1rem; color: var(--muted); line-height: 1.8; }
+
+    /* FOOTER */
+    footer { background: #080705; padding: 4rem 4rem 2rem; border-top: 1px solid rgba(201,168,76,0.1); }
+    .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 4rem; margin-bottom: 3rem; }
+    .footer-brand .nav-logo { display: block; font-size: 1.8rem; margin-bottom: 1rem; }
+    .footer-brand p { font-size: 0.95rem; color: var(--muted); line-height: 1.8; max-width: 260px; }
+    .footer-col h4 { font-family: 'Montserrat', sans-serif; font-size: 0.65rem; letter-spacing: 3px; text-transform: uppercase; color: var(--gold); margin-bottom: 1.5rem; }
+    .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 0.8rem; }
+    .footer-col a { color: var(--muted); text-decoration: none; font-size: 0.95rem; transition: color 0.3s; }
+    .footer-col a:hover { color: var(--gold); }
+    .footer-bottom { border-top: 1px solid rgba(255,255,255,0.05); padding-top: 2rem; display: flex; justify-content: space-between; }
+    .footer-bottom p { font-family: 'Montserrat', sans-serif; font-size: 0.65rem; letter-spacing: 1px; color: var(--muted); }
+
+    @media (max-width: 900px) {
+      nav { padding: 1.2rem 2rem; }
+      .nav-links { display: none; }
+      .contact-layout { grid-template-columns: 1fr; }
+      .contact-left, .contact-right { padding: 4rem 2rem; }
+      .field-grid { grid-template-columns: 1fr; }
+      .info-cards { grid-template-columns: 1fr; }
+      .faq-section { padding: 4rem 2rem; }
+      .page-header { padding: 0 2rem 3rem; }
+      .footer-grid { grid-template-columns: 1fr 1fr; gap: 2rem; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">Ember & Oak</a>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="product.html">Menu</a></li>
+    <li><a href="contact.html" class="active">Contact</a></li>
+    <li><a href="contact.html" class="active">Reservations</a></li>
+  </ul>
+  <a href="#reservation" class="nav-reserve">Reserve a Table</a>
+</nav>
+
+<div class="page-header">
+  <div class="page-header-content">
+    <span class="section-label">Get in Touch</span>
+    <h1>Contact &<br><em>Reservations</em></h1>
+    <p>We would love to welcome you. Reserve your table, plan a private event, or simply say hello — our team is here for you.</p>
+  </div>
+</div>
+
+<!-- INFO CARDS -->
+<div class="info-cards">
+  <div class="info-card">
+    <span class="info-card-icon">📍</span>
+    <h4>Visit Us</h4>
+    <p>12 Jubilee Hills Road No. 36<br>Hyderabad – 500033<br>Telangana, India</p>
+  </div>
+  <div class="info-card">
+    <span class="info-card-icon">📞</span>
+    <h4>Call or Email</h4>
+    <p>+91 40 4567 8900<br>hello@emberandoak.in<br>reservations@emberandoak.in</p>
+  </div>
+  <div class="info-card">
+    <span class="info-card-icon">🕐</span>
+    <h4>Opening Hours</h4>
+    <p>Mon–Thu: 6 PM – 11 PM<br>Fri–Sat: 6 PM – 12 AM<br>Sunday: 12 PM – 10 PM</p>
+  </div>
+</div>
+
+<!-- MAIN CONTACT SECTION -->
+<div class="contact-layout" id="reservation">
+  <!-- LEFT -->
+  <div class="contact-left">
+    <span class="section-label">Find Us</span>
+    <h2 style="font-family:'Playfair Display',serif; font-size:clamp(1.8rem,3vw,2.5rem); color:var(--cream);">Our <em style="color:var(--gold);font-style:italic;">Location</em></h2>
+    <div class="gold-line"></div>
+
+    <div class="contact-info-blocks">
+      <div class="info-block">
+        <h4>Address</h4>
+        <p>12 Jubilee Hills, Road No. 36<br>Hyderabad – 500033<br>Telangana, India</p>
+      </div>
+      <div class="info-block">
+        <h4>Phone & Email</h4>
+        <p><a href="tel:+914045678900">+91 40 4567 8900</a><br><a href="mailto:hello@emberandoak.in">hello@emberandoak.in</a></p>
+      </div>
+      <div class="info-block">
+        <h4>Opening Hours</h4>
+        <div class="hours-table">
+          <div class="hour-row"><span class="hour-day">Mon – Thu</span><span class="hour-time">6:00 PM – 11:00 PM</span></div>
+          <div class="hour-row"><span class="hour-day">Friday</span><span class="hour-time">6:00 PM – 12:00 AM</span></div>
+          <div class="hour-row"><span class="hour-day">Saturday</span><span class="hour-time">6:00 PM – 12:00 AM</span></div>
+          <div class="hour-row"><span class="hour-day">Sunday</span><span class="hour-time">12:00 PM – 10:00 PM</span></div>
+        </div>
+      </div>
+      <div class="info-block">
+        <h4>Parking</h4>
+        <p>Complimentary valet parking available from 6:00 PM. Street parking also available nearby.</p>
+      </div>
+    </div>
+
+    <a href="https://maps.google.com/?q=Jubilee+Hills+Hyderabad" target="_blank" class="map-placeholder">
+      <span>🗺️</span>
+      <p>Open in Google Maps</p>
+    </a>
+  </div>
+
+  <!-- RIGHT - FORMS -->
+  <div class="contact-right">
+    <div class="form-header">
+      <h2>Make a <em>Reservation</em></h2>
+      <p>We'll confirm your booking within 2 hours. For same-day reservations, please call us directly.</p>
+    </div>
+
+    <div class="form-tabs">
+      <button class="form-tab active" onclick="showTab('reserve')">Reserve a Table</button>
+      <button class="form-tab" onclick="showTab('private')">Private Event</button>
+      <button class="form-tab" onclick="showTab('message')">Send a Message</button>
+    </div>
+
+    <!-- RESERVATION FORM -->
+    <div class="form-panel active" id="reserve">
+      <div class="field-grid">
+        <div class="field-group">
+          <label>First Name *</label>
+          <input type="text" id="r-fname" placeholder="Arjun" />
+          <span class="error-msg" id="err-fname"></span>
+        </div>
+        <div class="field-group">
+          <label>Last Name *</label>
+          <input type="text" id="r-lname" placeholder="Sharma" />
+          <span class="error-msg" id="err-lname"></span>
+        </div>
+      </div>
+      <div class="field-grid">
+        <div class="field-group">
+          <label>Email *</label>
+          <input type="email" id="r-email" placeholder="you@example.com" />
+          <span class="error-msg" id="err-email"></span>
+        </div>
+        <div class="field-group">
+          <label>Phone *</label>
+          <input type="tel" id="r-phone" placeholder="+91 98765 43210" />
+          <span class="error-msg" id="err-phone"></span>
+        </div>
+      </div>
+      <div class="field-grid">
+        <div class="field-group">
+          <label>Date *</label>
+          <input type="date" id="r-date" />
+          <span class="error-msg" id="err-date"></span>
+        </div>
+        <div class="field-group">
+          <label>Preferred Time *</label>
+          <select id="r-time">
+            <option value="">Select time</option>
+            <option>6:00 PM</option><option>6:30 PM</option>
+            <option>7:00 PM</option><option>7:30 PM</option>
+            <option>8:00 PM</option><option>8:30 PM</option>
+            <option>9:00 PM</option><option>9:30 PM</option>
+          </select>
+          <span class="error-msg" id="err-time"></span>
+        </div>
+      </div>
+      <div class="field-grid">
+        <div class="field-group">
+          <label>Number of Guests *</label>
+          <select id="r-guests">
+            <option value="">Select</option>
+            <option>1 Guest</option><option>2 Guests</option>
+            <option>3 Guests</option><option>4 Guests</option>
+            <option>5 Guests</option><option>6 Guests</option>
+            <option>7–8 Guests</option>
+          </select>
+          <span class="error-msg" id="err-guests"></span>
+        </div>
+        <div class="field-group">
+          <label>Dining Area</label>
+          <select id="r-area">
+            <option value="">No preference</option>
+            <option>Main Dining Room</option>
+            <option>Bar Seating</option>
+            <option>Terrace</option>
+            <option>Private Room</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-full">
+        <label style="font-family:'Montserrat',sans-serif; font-size:0.6rem; letter-spacing:2px; text-transform:uppercase; color:var(--muted); display:block; margin-bottom:0.8rem;">Occasion</label>
+        <div class="occasion-pills">
+          <span class="pill" onclick="togglePill(this)">Birthday</span>
+          <span class="pill" onclick="togglePill(this)">Anniversary</span>
+          <span class="pill" onclick="togglePill(this)">Business Dinner</span>
+          <span class="pill" onclick="togglePill(this)">Proposal</span>
+          <span class="pill" onclick="togglePill(this)">Date Night</span>
+          <span class="pill" onclick="togglePill(this)">Celebration</span>
+        </div>
+      </div>
+      <div class="field-full">
+        <div class="field-group">
+          <label>Special Requests</label>
+          <textarea id="r-notes" placeholder="Dietary requirements, allergies, special arrangements, or any notes for our team..."></textarea>
+        </div>
+      </div>
+      <button class="btn-submit" onclick="submitReservation()">Confirm Reservation</button>
+      <div class="success-banner" id="reserve-success">
+        <strong>Reservation Received!</strong>
+        <p>Thank you. We'll confirm your booking at Ember & Oak within 2 hours. We look forward to welcoming you.</p>
+      </div>
+    </div>
+
+    <!-- PRIVATE EVENT FORM -->
+    <div class="form-panel" id="private">
+      <div class="field-grid">
+        <div class="field-group">
+          <label>Full Name *</label>
+          <input type="text" id="p-name" placeholder="Your name" />
+        </div>
+        <div class="field-group">
+          <label>Company / Organisation</label>
+          <input type="text" id="p-company" placeholder="Optional" />
+        </div>
+      </div>
+      <div class="field-grid">
+        <div class="field-group">
+          <label>Email *</label>
+          <input type="email" id="p-email" placeholder="you@example.com" />
+        </div>
+        <div class="field-group">
+          <label>Phone *</label>
+          <input type="tel" id="p-phone" placeholder="+91 98765 43210" />
+        </div>
+      </div>
+      <div class="field-grid">
+        <div class="field-group">
+          <label>Event Date *</label>
+          <input type="date" id="p-date" />
+        </div>
+        <div class="field-group">
+          <label>Expected Guests *</label>
+          <select id="p-guests">
+            <option value="">Select</option>
+            <option>Up to 10</option><option>10–20</option>
+            <option>20–30</option><option>30–50</option>
+            <option>50+</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-full">
+        <div class="field-group">
+          <label>Event Type</label>
+          <select id="p-type">
+            <option value="">Select event type</option>
+            <option>Corporate Dinner</option>
+            <option>Birthday Celebration</option>
+            <option>Wedding Reception</option>
+            <option>Engagement Party</option>
+            <option>Product Launch</option>
+            <option>Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-full">
+        <div class="field-group">
+          <label>Tell Us About Your Event</label>
+          <textarea id="p-details" placeholder="Please describe your event vision, budget expectations, menu preferences, AV requirements, or any other details..."></textarea>
+        </div>
+      </div>
+      <button class="btn-submit" onclick="submitPrivate()">Submit Enquiry</button>
+      <div class="success-banner" id="private-success">
+        <strong>Enquiry Received!</strong>
+        <p>Our events team will be in touch within 24 hours to discuss your vision in detail.</p>
+      </div>
+    </div>
+
+    <!-- MESSAGE FORM -->
+    <div class="form-panel" id="message">
+      <div class="field-grid">
+        <div class="field-group">
+          <label>Your Name *</label>
+          <input type="text" id="m-name" placeholder="Your name" />
+        </div>
+        <div class="field-group">
+          <label>Email *</label>
+          <input type="email" id="m-email" placeholder="you@example.com" />
+        </div>
+      </div>
+      <div class="field-full">
+        <div class="field-group">
+          <label>Subject</label>
+          <select id="m-subject">
+            <option>General Enquiry</option>
+            <option>Feedback</option>
+            <option>Media & Press</option>
+            <option>Careers</option>
+            <option>Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-full">
+        <div class="field-group">
+          <label>Message *</label>
+          <textarea id="m-message" style="min-height:180px;" placeholder="Write your message here..."></textarea>
+        </div>
+      </div>
+      <button class="btn-submit" onclick="submitMessage()">Send Message</button>
+      <div class="success-banner" id="message-success">
+        <strong>Message Sent!</strong>
+        <p>Thank you for reaching out. We'll reply to you shortly at the email provided.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FAQ -->
+<section class="faq-section">
+  <h2>Frequently <em>Asked</em> Questions</h2>
+  <div class="gold-line"></div>
+  <div class="faq-list">
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <span>Is there a dress code?</span>
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-a"><p>We have a smart-casual dress code. We ask that guests avoid sportswear, flip-flops, and overly casual clothing. We want you to feel comfortable and look your best.</p></div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <span>Do you accommodate dietary restrictions?</span>
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-a"><p>Absolutely. We cater to vegetarian, vegan, gluten-free, and most allergy requirements. Please mention this in your reservation notes so our kitchen can prepare accordingly.</p></div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <span>What is your cancellation policy?</span>
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-a"><p>We kindly request 24 hours' notice for cancellations. For private events and the tasting menu, we ask for 48 hours' notice. Late cancellations may be subject to a fee.</p></div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <span>Is valet parking available?</span>
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-a"><p>Yes, complimentary valet parking is available from 6:00 PM daily at the main entrance. We also have a dedicated car park adjacent to the restaurant.</p></div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <span>Can we bring our own wine?</span>
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-a"><p>We do not permit corkage. However, our sommelier has curated an exceptional cellar to suit all occasions and budgets. We'd love to find the perfect bottle for you.</p></div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <span>Do you host children?</span>
+        <span class="faq-toggle">+</span>
+      </div>
+      <div class="faq-a"><p>Ember & Oak is an adult-oriented fine dining environment. We welcome children aged 10 and above during dinner service. Please speak to us when booking so we can accommodate you appropriately.</p></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="index.html" class="nav-logo">Ember & Oak</a>
+      <p>A celebration of fire, craft and the art of gathering. Located in Hyderabad.</p>
+    </div>
+    <div class="footer-col"><h4>Navigate</h4><ul><li><a href="index.html">Home</a></li><li><a href="product.html">Menu</a></li><li><a href="contact.html">Contact</a></li></ul></div>
+    <div class="footer-col"><h4>Dining</h4><ul><li><a href="#">Private Events</a></li><li><a href="#">Chef's Table</a></li><li><a href="#">Gift Cards</a></li></ul></div>
+    <div class="footer-col"><h4>Find Us</h4><ul><li><a href="#">12 Jubilee Hills, Hyderabad – 500033</a></li><li><a href="tel:+914045678900">+91 40 4567 8900</a></li><li><a href="mailto:hello@emberandoak.in">hello@emberandoak.in</a></li></ul></div>
+  </div>
+  <div class="footer-bottom"><p>© 2026 Ember & Oak. All rights reserved.</p><p>Privacy Policy · Terms of Service</p></div>
+</footer>
+
+<script>
+  // Set min date for date pickers
+  const today = new Date().toISOString().split('T')[0];
+  document.querySelectorAll('input[type="date"]').forEach(el => el.min = today);
+
+  function showTab(id) {
+    document.querySelectorAll('.form-panel').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.form-tab').forEach(el => el.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    event.target.classList.add('active');
+  }
+
+  function togglePill(el) {
+    el.classList.toggle('active');
+  }
+
+  function toggleFaq(el) {
+    const item = el.parentElement;
+    item.classList.toggle('open');
+  }
+
+  function validate(id, errId, msg) {
+    const el = document.getElementById(id);
+    const errEl = document.getElementById(errId);
+    if (!el || !el.value.trim()) {
+      if (el) el.classList.add('error');
+      if (errEl) errEl.textContent = msg;
+      return false;
+    }
+    el.classList.remove('error');
+    if (errEl) errEl.textContent = '';
+    return true;
+  }
+
+  function submitReservation() {
+    const v1 = validate('r-fname', 'err-fname', 'First name required');
+    const v2 = validate('r-lname', 'err-lname', 'Last name required');
+    const v3 = validate('r-email', 'err-email', 'Email required');
+    const v4 = validate('r-phone', 'err-phone', 'Phone required');
+    const v5 = validate('r-date', 'err-date', 'Date required');
+    const v6 = validate('r-time', 'err-time', 'Time required');
+    const v7 = validate('r-guests', 'err-guests', 'Guest count required');
+    if (v1 && v2 && v3 && v4 && v5 && v6 && v7) {
+      document.getElementById('reserve-success').classList.add('show');
+      document.querySelector('#reserve .btn-submit').disabled = true;
+      document.getElementById('reserve-success').scrollIntoView({ behavior: 'smooth' });
+    }
+  }
+
+  function submitPrivate() {
+    document.getElementById('private-success').classList.add('show');
+    event.target.disabled = true;
+  }
+
+  function submitMessage() {
+    document.getElementById('message-success').classList.add('show');
+    event.target.disabled = true;
+  }
+</script>
+</body>
+</html>
